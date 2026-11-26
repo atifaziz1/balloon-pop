@@ -2,9 +2,9 @@
 
 A colorful React alphabet game made for little hands. One smiling letter balloon at a time, gentle sounds, and endless play.
 
-## [▶ Click here to play](https://atifaziz1.github.io/balloon-pop/)
+## [▶ Click here to play the alphabet game](https://atifaziz1.github.io/balloon-pop/?v=alphabet-2)
 
-Open the link above in a browser. No download or account is needed. Bookmark it on your child's device for easy access.
+Open the link above in a browser. It opens the alphabet version with a fresh page URL, bypassing a cached copy of the original game. No download or account is needed. Bookmark this link on your child's device for easy access.
 
 - **Match the letter:** each balloon shows a large uppercase letter. Press only that letter on a physical keyboard to pop it. Uppercase and lowercase both work. Other keys, clicking, and tapping do not pop balloons.
 - **Learn A–Z:** balloons follow the alphabet, then repeat from A.

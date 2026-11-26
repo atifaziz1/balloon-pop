@@ -129,7 +129,7 @@ export default function App() {
   return <main className="game">
     <div className="sky-decor" aria-hidden="true"><span className="cloud cloud-one"/><span className="cloud cloud-two"/><span className="cloud cloud-three"/><span className="sparkle s-one">✦</span><span className="sparkle s-two">✧</span><span className="sparkle s-three">✦</span><span className="sparkle s-four">✧</span><div className="hill hill-back"/><div className="hill hill-front"/></div>
     <header className="header">
-      <a className="brand" href="./" aria-label="Pop and Play home"><img src="./balloon.svg" alt=""/><span>pop<span className="brand-and">&</span>play<span className="brand-dot">.</span><small>LITTLE HANDS, BIG FUN</small></span></a>
+      <a className="brand" href={`./${window.location.search}`} aria-label="Pop and Play home"><img src="./balloon.svg" alt=""/><span>pop<span className="brand-and">&</span>play<span className="brand-dot">.</span><small>LITTLE HANDS, BIG FUN</small></span></a>
       <nav className="controls" aria-label="Game controls">
         <button className="control" onClick={() => setSound(!sound)} aria-label={sound ? 'Mute sound' : 'Turn sound on'} aria-pressed={sound}><Icon name={sound ? 'sound' : 'mute'}/><span>Sound {sound ? 'on' : 'off'}</span></button>
         <button className="control" onClick={() => dispatch({ type: 'PAUSE' })} aria-label={game.paused ? 'Resume game' : 'Pause game'}><Icon name={game.paused ? 'play' : 'pause'}/><span>{game.paused ? 'Resume' : 'Pause'}</span></button>
