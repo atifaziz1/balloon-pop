@@ -1,12 +1,13 @@
 # 🎈 Pop & Play
 
-A colorful React balloon game made for little hands. One smiling balloon at a time, gentle sounds, and endless play.
+A colorful React alphabet game made for little hands. One smiling letter balloon at a time, gentle sounds, and endless play.
 
 ## [▶ Click here to play](https://atifaziz1.github.io/balloon-pop/)
 
 Open the link above in a browser. No download or account is needed. Bookmark it on your child's device for easy access.
 
-- **Pop:** press a letter, number, arrow key, or Space. You can also click or tap the balloon.
+- **Match the letter:** each balloon shows a large uppercase letter. Press only that letter on a physical keyboard to pop it. Uppercase and lowercase both work. Other keys, clicking, and tapping do not pop balloons.
+- **Learn A–Z:** balloons follow the alphabet, then repeat from A.
 - **One balloon at a time:** the next balloon arrives after a short celebration.
 - **60 seconds per balloon:** if a balloon is not popped, a fresh balloon appears automatically. The game never ends.
 - **Pause:** take a break and resume with the remaining time. Changing tabs also pauses play.

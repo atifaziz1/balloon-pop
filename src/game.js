@@ -1,4 +1,6 @@
 export const BALLOON_SECONDS = 60;
+export const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+export const letterForBalloon = (balloon) => ALPHABET[balloon % ALPHABET.length];
 export const COLORS = [
   { name: 'Pink', fill: '#fa8095', shade: '#d95375', glow: '#ffafbc' },
   { name: 'Blue', fill: '#76baff', shade: '#468ddd', glow: '#b6dcff' },
@@ -14,6 +16,7 @@ export function gameReducer(state, action) {
   switch (action.type) {
     case 'POP':
       if (state.paused || state.celebrating) return state;
+      if (typeof action.key !== 'string' || action.key.toUpperCase() !== letterForBalloon(state.balloon)) return state;
       return { ...state, popped: state.popped + 1, celebrating: true };
     case 'NEXT':
       return { ...state, balloon: state.balloon + 1, seconds: BALLOON_SECONDS, celebrating: false };

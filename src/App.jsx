@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
-import { BALLOON_SECONDS, COLORS, gameReducer, initialGame } from './game.js';
+import { BALLOON_SECONDS, COLORS, gameReducer, initialGame, letterForBalloon } from './game.js';
 
 function Icon({ name, ...props }) {
   const paths = {
@@ -14,7 +14,7 @@ function Icon({ name, ...props }) {
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>{paths[name]}</svg>;
 }
 
-function Balloon({ color }) {
+function Balloon({ color, letter }) {
   return <svg className="balloon-art" viewBox="0 0 300 440" aria-hidden="true">
     <defs>
       <radialGradient id="balloon-color" cx="35%" cy="28%" r="80%"><stop offset="0%" stopColor={color.glow}/><stop offset="53%" stopColor={color.fill}/><stop offset="100%" stopColor={color.shade}/></radialGradient>
@@ -25,9 +25,12 @@ function Balloon({ color }) {
     <path d="M150 12C77 12 28 60 28 134c0 80 67 151 122 151s122-71 122-151C272 60 223 12 150 12Z" fill="url(#balloon-color)"/>
     <path d="M79 57c-20 18-29 44-27 64" fill="none" stroke="url(#shine)" strokeWidth="19" strokeLinecap="round"/>
     <ellipse cx="109" cy="42" rx="13" ry="7" fill="white" opacity=".35" transform="rotate(-20 109 42)"/>
+    <text x="150" y="166" textAnchor="middle" fontFamily="'Fredoka', sans-serif" fontSize="112" fontWeight="500" fill="#513758">{letter}</text>
+    <g transform="translate(0 65)">
     <ellipse cx="112" cy="159" rx="5" ry="7" fill="#61364f"/><ellipse cx="187" cy="159" rx="5" ry="7" fill="#61364f"/>
     <ellipse cx="97" cy="178" rx="14" ry="7" fill="#ee6287" opacity=".4"/><ellipse cx="202" cy="178" rx="14" ry="7" fill="#ee6287" opacity=".4"/>
     <path d="M136 176q14 17 28 0" fill="none" stroke="#61364f" strokeWidth="4" strokeLinecap="round"/>
+    </g>
   </svg>;
 }
 
@@ -43,6 +46,7 @@ export default function App() {
   const helpButton = useRef(null);
   const dialog = useRef(null);
   const color = COLORS[game.balloon % COLORS.length];
+  const letter = letterForBalloon(game.balloon);
   const paused = game.paused || help;
 
   useEffect(() => {
@@ -104,19 +108,17 @@ export default function App() {
     } catch { /* The game also works when audio is unavailable. */ }
   }, [sound]);
 
-  const pop = useCallback((key = '') => {
-    if (paused || game.celebrating) return;
-    setLastKey(key === ' ' ? 'SPACE' : key.toUpperCase());
+  const pop = useCallback((key) => {
+    if (paused || game.celebrating || key.toUpperCase() !== letter) return;
+    setLastKey(key.toUpperCase());
     playPop();
-    dispatch({ type: 'POP' });
-  }, [paused, game.celebrating, playPop]);
+    dispatch({ type: 'POP', key });
+  }, [paused, game.celebrating, letter, playPop]);
 
   useEffect(() => {
     const onKey = (event) => {
-      if (event.repeat || event.ctrlKey || event.altKey || event.metaKey || paused) return;
-      if (event.key.length !== 1 && !event.key.startsWith('Arrow')) return;
-      // Leave Space and Enter activation on controls to the browser.
-      if (event.key === ' ' && event.target.closest?.('button, input, select, textarea, a')) return;
+      if (event.repeat || event.isComposing || event.ctrlKey || event.altKey || event.metaKey || paused) return;
+      if (!/^[a-z]$/i.test(event.key)) return;
       event.preventDefault();
       pop(event.key);
     };
@@ -144,17 +146,17 @@ export default function App() {
 
       <div className="balloon-stage">
         <span className="floating-note note-left" aria-hidden="true">hello, little<br/>balloon!<svg viewBox="0 0 65 45"><path d="M4 4q-3 30 52 26m-10-9 12 9-13 7"/></svg></span>
-        {game.celebrating ? <div className="celebration" data-testid="celebration"><div className="confetti" aria-hidden="true">{Array.from({ length: 16 }, (_, i) => <i key={i} style={{ '--i': i, '--color': COLORS[i % COLORS.length].fill }}/>)}</div><strong>{['Lovely pop!', 'You did it!', 'Hooray!', 'So much fun!', 'Great job!'][game.popped % 5]}</strong><span>{lastKey && <kbd>{lastKey}</kbd>} A little burst of joy!</span></div> : <button key={game.balloon} className={`balloon-button ${paused ? 'is-paused' : ''}`} aria-label={`Pop the ${color.name.toLowerCase()} balloon`} onClick={() => pop()} disabled={paused}><Balloon color={color}/></button>}
+        {game.celebrating ? <div className="celebration" data-testid="celebration"><div className="confetti" aria-hidden="true">{Array.from({ length: 16 }, (_, i) => <i key={i} style={{ '--i': i, '--color': COLORS[i % COLORS.length].fill }}/>)}</div><strong>{['Lovely pop!', 'You did it!', 'Hooray!', 'So much fun!', 'Great job!'][game.popped % 5]}</strong><span>{lastKey && <kbd>{lastKey}</kbd>} A little burst of joy!</span></div> : <div key={game.balloon} className={`balloon-target ${paused ? 'is-paused' : ''}`} role="img" aria-label={`${color.name} balloon, letter ${letter}. Press ${letter} to pop.`}><Balloon color={color} letter={letter}/></div>}
         <span className="floating-note note-right" aria-hidden="true">{color.name.toLowerCase()} &<br/>full of joy <span>♡</span></span>
         <div className="balloon-shadow" aria-hidden="true"/>
         {paused && <div className="pause-overlay"><span>☁</span><h2>{help ? 'A little break' : 'Taking a little break?'}</h2><p>Your balloon is waiting for you.</p>{!help && <button className="primary-button" onClick={() => dispatch({ type: 'PAUSE' })}><Icon name="play"/> Let’s play</button>}</div>}
       </div>
 
-      <div className="instructions"><span className="keyboard-icon"><Icon name="keyboard"/></span><div><p>Press <kbd>any letter</kbd> or <kbd>space</kbd> to pop</p><small>Or tap the balloon. You’re in charge!</small></div></div>
+      <div className="instructions"><span className="keyboard-icon"><Icon name="keyboard"/></span><div><p>Press <kbd>{letter}</kbd> to pop the balloon</p><small>Find the matching letter on your keyboard.</small></div></div>
       <div className="color-trail" aria-hidden="true">{COLORS.map((c, i) => <span key={c.name} className={i === game.balloon % COLORS.length ? 'active' : ''} style={{ '--dot-color': c.fill }}/>)}</div>
     </section>
     <footer><span>Made for little moments of joy <span className="heart">♥</span></span><span>No rush. No game over. Just play.</span></footer>
-    <div className="sr-only" role="status" aria-live="polite">{game.celebrating ? `Pop! ${game.popped} balloons popped.` : `${color.name} balloon ready.`}</div>
-    <dialog ref={dialog} className="help-dialog" onCancel={() => setHelp(false)} onClose={() => { setHelp(false); helpButton.current?.focus(); }}><span className="dialog-balloon">🎈</span><h2>Little hands, big fun.</h2><p>Press a letter, a number, an arrow key, or the space bar to pop the balloon. You can tap it, too!</p><p>Each balloon gets one minute. When time runs out, a new balloon appears. The fun keeps going for as long as you like.</p><p>Use Pause for a break, or the speaker to turn sounds off. Switching to another tab pauses the game.</p><button className="primary-button" onClick={() => setHelp(false)}>Let’s play</button></dialog>
+    <div className="sr-only" role="status" aria-live="polite">{game.celebrating ? `Pop! ${game.popped} balloons popped.` : `${color.name} balloon with letter ${letter}. Press ${letter} on your keyboard.`}</div>
+    <dialog ref={dialog} className="help-dialog" onCancel={() => setHelp(false)} onClose={() => { setHelp(false); helpButton.current?.focus(); }}><span className="dialog-balloon">🎈</span><h2>Little hands, big fun.</h2><p>Look at the big letter on the balloon, then press the matching letter on your keyboard. For example, press A for an A balloon. Uppercase and lowercase both work.</p><p>Other keys and clicking or tapping the balloon won’t pop it. The letters go from A to Z, then start again.</p><p>Each balloon gets one minute. When time runs out, the next letter appears. Use Pause for a break, or the speaker to turn sounds off. Switching tabs also pauses play.</p><button className="primary-button" onClick={() => setHelp(false)}>Let’s play</button></dialog>
   </main>;
 }
