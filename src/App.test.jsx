@@ -3,8 +3,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import App from './App.jsx';
 
-beforeEach(() => vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'performance'] }));
-afterEach(() => { cleanup(); vi.useRealTimers(); });
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'performance'] });
+  vi.spyOn(Math, 'random').mockReturnValue(0);
+});
+afterEach(() => { cleanup(); vi.useRealTimers(); vi.restoreAllMocks(); });
 const advance = (ms) => act(() => vi.advanceTimersByTime(ms));
 
 describe('continuous balloon play', () => {
@@ -25,7 +28,7 @@ describe('continuous balloon play', () => {
 
   it('automatically replaces unpopped balloons every minute without increasing score or ending', () => {
     render(<App />);
-    for (const letter of 'BCDEFGH') {
+    for (const letter of 'BABABAB') {
       advance(60000);
       expect(screen.getByRole('img', { name: new RegExp(`balloon, letter ${letter}\\.`) })).toBeTruthy();
       expect(screen.getByTestId('timer').textContent).toBe('1:00');
@@ -75,15 +78,23 @@ describe('continuous balloon play', () => {
     expect(screen.getByTestId('score').textContent).toBe('2');
   });
 
-  it('shows all letters A to Z and repeats with A after Z', () => {
+  it('starts with a random letter and draws again only for a new balloon', () => {
+    vi.mocked(Math.random).mockReturnValue(0.75);
     render(<App />);
-    for (const letter of 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') {
-      const balloon = screen.getByRole('img', { name: new RegExp(`balloon, letter ${letter}`) });
-      expect(balloon.querySelector('text').textContent).toBe(letter);
-      fireEvent.keyDown(window, { key: letter.toLowerCase() });
-      advance(650);
-    }
-    expect(screen.getByTestId('score').textContent).toBe('26');
+    expect(screen.getByRole('img', { name: /balloon, letter T/ })).toBeTruthy();
+    vi.mocked(Math.random).mockReturnValue(0);
+    advance(5000);
+    fireEvent.click(screen.getByRole('button', { name: 'Mute sound' }));
+    expect(screen.getByRole('img', { name: /balloon, letter T/ })).toBeTruthy();
+    fireEvent.keyDown(window, { key: 'a' });
+    expect(screen.getByTestId('score').textContent).toBe('0');
+    fireEvent.keyDown(window, { key: 't' });
+    advance(650);
     expect(screen.getByRole('img', { name: /balloon, letter A/ })).toBeTruthy();
+    vi.mocked(Math.random).mockReturnValue(0.999);
+    advance(60000);
+    expect(screen.getByRole('img', { name: /balloon, letter Z/ })).toBeTruthy();
+    expect(screen.getByTestId('score').textContent).toBe('1');
+    expect(screen.getByTestId('timer').textContent).toBe('1:00');
   });
 });

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
-import { BALLOON_SECONDS, COLORS, gameReducer, initialGame, letterForBalloon } from './game.js';
+import { BALLOON_SECONDS, COLORS, createGame, gameReducer } from './game.js';
 
 function Icon({ name, ...props }) {
   const paths = {
@@ -35,7 +35,7 @@ function Balloon({ color, letter }) {
 }
 
 export default function App() {
-  const [game, dispatch] = useReducer(gameReducer, initialGame);
+  const [game, dispatch] = useReducer(gameReducer, undefined, createGame);
   const [sound, setSound] = useState(true);
   const [help, setHelp] = useState(false);
   const [lastKey, setLastKey] = useState('');
@@ -46,7 +46,7 @@ export default function App() {
   const helpButton = useRef(null);
   const dialog = useRef(null);
   const color = COLORS[game.balloon % COLORS.length];
-  const letter = letterForBalloon(game.balloon);
+  const letter = game.letter;
   const paused = game.paused || help;
 
   useEffect(() => {
@@ -59,7 +59,7 @@ export default function App() {
     const timer = setInterval(() => {
       const seconds = (deadline.current - performance.now()) / 1000;
       if (seconds <= 0) clearInterval(timer);
-      dispatch({ type: 'TICK', seconds });
+      dispatch({ type: 'TICK', seconds, random: seconds <= 0 ? Math.random() : undefined });
     }, 100);
     return () => {
       remaining.current = Math.max(0, deadline.current - performance.now());
@@ -69,7 +69,7 @@ export default function App() {
 
   useEffect(() => {
     if (!game.celebrating) return;
-    const timer = setTimeout(() => dispatch({ type: 'NEXT' }), 650);
+    const timer = setTimeout(() => dispatch({ type: 'NEXT', random: Math.random() }), 650);
     return () => clearTimeout(timer);
   }, [game.celebrating]);
 
@@ -157,6 +157,6 @@ export default function App() {
     </section>
     <footer><span>Made for little moments of joy <span className="heart">♥</span></span><span>No rush. No game over. Just play.</span></footer>
     <div className="sr-only" role="status" aria-live="polite">{game.celebrating ? `Pop! ${game.popped} balloons popped.` : `${color.name} balloon with letter ${letter}. Press ${letter} on your keyboard.`}</div>
-    <dialog ref={dialog} className="help-dialog" onCancel={() => setHelp(false)} onClose={() => { setHelp(false); helpButton.current?.focus(); }}><span className="dialog-balloon">🎈</span><h2>Little hands, big fun.</h2><p>Look at the big letter on the balloon, then press the matching letter on your keyboard. For example, press A for an A balloon. Uppercase and lowercase both work.</p><p>Other keys and clicking or tapping the balloon won’t pop it. The letters go from A to Z, then start again.</p><p>Each balloon gets one minute. When time runs out, the next letter appears. Use Pause for a break, or the speaker to turn sounds off. Switching tabs also pauses play.</p><button className="primary-button" onClick={() => setHelp(false)}>Let’s play</button></dialog>
+    <dialog ref={dialog} className="help-dialog" onCancel={() => setHelp(false)} onClose={() => { setHelp(false); helpButton.current?.focus(); }}><span className="dialog-balloon">🎈</span><h2>Little hands, big fun.</h2><p>Look at the big letter on the balloon, then press the matching letter on your keyboard. For example, press A for an A balloon. Uppercase and lowercase both work.</p><p>Other keys and clicking or tapping the balloon won’t pop it. Every balloon shows a random letter from A to Z, with no repeats in a row.</p><p>Each balloon gets one minute. When time runs out, the next letter appears. Use Pause for a break, or the speaker to turn sounds off. Switching tabs also pauses play.</p><button className="primary-button" onClick={() => setHelp(false)}>Let’s play</button></dialog>
   </main>;
 }
